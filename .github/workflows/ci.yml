@@ -1,0 +1,26 @@
+name: ci
+on: [push, pull_request, workflow_dispatch]
+concurrency: { group: "${{ github.workflow }}-${{ github.ref }}", cancel-in-progress: true }
+jobs:
+  macos:
+    name: Gates on macOS (XCTest + fault matrix + baseline)
+    runs-on: macos-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - run: sw_vers && swift --version
+      - run: scripts/ci/gates.sh
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { name: macos-reports, path: build/reports }
+  ios-sim:
+    name: Gates on the iOS Simulator
+    needs: macos            # one macOS runner at a time (free accounts share ~5)
+    runs-on: macos-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - run: scripts/ci/ios-sim.sh
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { name: ios-sim-reports, path: build/reports }
