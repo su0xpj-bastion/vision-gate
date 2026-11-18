@@ -179,6 +179,10 @@ public enum Duplicates {
         }
     }
 
+    public static func distances(_ fps: [VNFeaturePrintObservation]) throws -> [[Float]] {
+        try fps.map { a in try fps.map { b in var d: Float = 0; try a.computeDistance(&d, to: b); return d } }
+    }
+
     /// Connected components under the threshold, each group sorted, groups sorted by first index.
     public static func groups(_ imgs: [CGImage]) throws -> [[Int]] {
         let fps = try prints(imgs)

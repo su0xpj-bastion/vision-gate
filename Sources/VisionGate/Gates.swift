@@ -166,8 +166,16 @@ public enum Gates {
                 truth.append(Array(start..<imgs.count))
             }
             let got = try Duplicates.groups(imgs)
-            return result("library.duplicates", "duplicate grouping", got == truth, "\(got.count) groups, truth \(truth.count): \(got.map { $0.count })",
-                          ["groups": Double(got.count)])
+            // Separability on this device: worst same-photo distance vs closest different-photo distance.
+            let d = try Duplicates.distances(try Duplicates.prints(imgs))
+            let groupOf = Dictionary(uniqueKeysWithValues: truth.enumerated().flatMap { g in g.element.map { ($0, g.offset) } })
+            var within: Float = 0, across = Float.infinity
+            for i in imgs.indices { for j in imgs.indices where j > i {
+                if groupOf[i] == groupOf[j] { within = max(within, d[i][j]) } else { across = min(across, d[i][j]) }
+            } }
+            return result("library.duplicates", "duplicate grouping", got == truth,
+                          "\(got.count) groups, truth \(truth.count): \(got.map { $0.count }); same-photo max \(f(Double(within))), different-photo min \(f(Double(across))), threshold \(f(Double(Duplicates.threshold)))",
+                          ["groups": Double(got.count), "separation_ratio": Double(across / max(within, 1e-6))])
         },
 
         // MARK: Core ML look
