@@ -12,7 +12,8 @@ ROOT = Path(__file__).resolve().parent.parent
 
 def failing(gate_bin: str, fault: str) -> set[str]:
     out = subprocess.run([gate_bin, "run", "--json"], capture_output=True, text=True, env=dict(os.environ, VG_FAULTS=fault)).stdout
-    return {r["name"] for r in json.loads(out) if not r["passed"]}
+    # perf.budgets is timing, not correctness: excluded from the matrix (it is gated on the clean run).
+    return {r["name"] for r in json.loads(out) if not r["passed"] and r["name"] != "perf.budgets"}
 
 
 def main() -> int:
