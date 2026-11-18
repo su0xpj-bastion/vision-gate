@@ -187,6 +187,20 @@ public enum Golden {
     /// A background with no text at all (OCR must return nothing).
     public static func noText(seed: UInt64) -> CGImage { title("", font: "Helvetica", size: 10, background: 2, seed: seed) }
 
+    /// Bold colour stripes: a fifth kind of picture for the duplicate set.
+    public static func stripes(seed: UInt64, w: Int = 1024, h: Int = 768) -> CGImage {
+        var r = Rng(seed)
+        let c = context(w, h)
+        var x = 0.0
+        while x < Double(w) {
+            let bw = 30 + r.next() * 90
+            c.setFillColor(col([r.next(), r.next(), r.next(), 1]))
+            c.fill(CGRect(x: x, y: 0, width: bw, height: Double(h)))
+            x += bw
+        }
+        return c.makeImage()!
+    }
+
     // MARK: re-encoding helpers (robustness variants)
 
     public static func jpeg(_ img: CGImage, quality: Double) -> CGImage {

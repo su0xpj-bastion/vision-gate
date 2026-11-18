@@ -158,13 +158,16 @@ public enum Gates {
         // MARK: duplicates
         Gate(name: "library.duplicates", feature: "duplicate grouping") {
             let bases: [CGImage] = [horizons[0].1, subjects[0].0, Golden.title("Opening Night", font: "Georgia", size: 56, background: 1, seed: 1),
-                                    clip.frames[5], clip.frames[30]]
+                                    clip.frames[5], Golden.stripes(seed: 11)]
             var imgs: [CGImage] = [], truth: [[Int]] = []
             for b in bases {
                 let start = imgs.count
                 imgs += [b, Golden.jpeg(b, quality: 0.8), Golden.scaled(b, 0.5), Golden.exposed(b, ev: 0.5)]
                 truth.append(Array(start..<imgs.count))
             }
+            // Near miss: another shot of the same location is a different photo, not a duplicate.
+            imgs.append(clip.frames[30])
+            truth.append([imgs.count - 1])
             let got = try Duplicates.groups(imgs)
             // Separability on this device: worst same-photo distance vs closest different-photo distance.
             let d = try Duplicates.distances(try Duplicates.prints(imgs))

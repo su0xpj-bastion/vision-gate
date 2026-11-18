@@ -171,9 +171,15 @@ public enum Titles {
 public enum Duplicates {
     public static var threshold: Float { Fault.on(.duplicateThresholdLoose) ? 10 : 7 }
 
+    /// Pinned. Without this, Vision uses the newest revision the app was *built* against: the same
+    /// code built with an older SDK (revision 1) and with Xcode 26 (revision 2) measured distances
+    /// about 16x apart, so a fixed threshold grouped everything into one pile on CI.
+    public static let revision = VNGenerateImageFeaturePrintRequestRevision1
+
     public static func prints(_ imgs: [CGImage]) throws -> [VNFeaturePrintObservation] {
         try imgs.map { img in
             let r = VNGenerateImageFeaturePrintRequest()
+            r.revision = revision
             try VN.perform(r, img, .up, cpuOnly: false)
             return r.results!.first as! VNFeaturePrintObservation
         }

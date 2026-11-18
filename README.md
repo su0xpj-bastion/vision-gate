@@ -11,7 +11,7 @@ answers, and a fault matrix that proves the gate catches the bugs that really sh
 | Shot detection | colour histograms | exact cut frames, no false cuts |
 | Subject tracking for reframing | `VNTrackObjectRequest` + re-acquire at cuts | ≥ 90% of frames within 0.06 of the subject, including after a cut |
 | Title OCR (search, captions, legibility) | `VNRecognizeTextRequest` | ≥ 98% exact titles across fonts, backgrounds, sizes and JPEG 50; no text invented on text-free frames |
-| Duplicate grouping | `VNGenerateImageFeaturePrintRequest` | re-encoded, resized and regraded copies grouped, distinct shots kept apart |
+| Duplicate grouping | `VNGenerateImageFeaturePrintRequest` (revision pinned) | re-encoded, resized and regraded copies grouped; another shot of the same place kept apart |
 | "Look" model (colour grade + sharpen) | Core ML, float32 + int8 | float vs a Swift reference ≥ 60 dB; app's pixel→tensor path checked with known colours; int8 vs float ≥ 40 dB; CPU vs GPU / Neural Engine ≥ 60 dB |
 | All features | | CPU vs accelerated parity, identical answers on repeat, latency budgets, XCTest CPU/memory metrics |
 
@@ -50,12 +50,14 @@ Core ML. These are not bugs in the frameworks. Each must fail exactly its pinned
 - The horizon detector returns the same tilt for a sideways-stored photo even when EXIF orientation is ignored. Only the crop gate exposes `ignoresOrientation`, which is why every feature needs its own orientation gate.
 - Attention saliency's bounding boxes are too loose to crop on (about half the frame). The heatmap peak lands within 0.03 of the subject, so the crop uses the peak.
 - The tracker loses the subject at a shot cut (confidence 0.01) and then stays put. The pipeline re-acquires the subject from saliency at cuts.
+- **Feature-print distances changed about 16x between builds.** Vision uses the newest request revision of the SDK the app was *built* with. Built with an older SDK, the code ran revision 1; built with Xcode 26, it ran revision 2. A fixed duplicate threshold of 7 merged all 20 images into one group on CI (same-photo pairs up to 0.58, different photos down to 0.37). The fix pins the revision. Any threshold applied to model output needs its model revision pinned.
 - OCR read 59 of 60 titles exactly. The miss, every time, is "Chapter 2: The Coast" read as "Chapter 2:The Coast".
 - A model and its reference agree even when both are fed BGR. Only a known-colour contract catches a channel swap.
 - Measured locally:
   - int8 against float32: 43.2 dB.
   - CPU against GPU/Neural Engine: 66.4 dB (fp16 on the accelerators).
   - The 2-bit build: 4.9 dB.
+- On the CI VM the CPU and "all units" outputs are identical: there is no GPU or Neural Engine, so Core ML falls back to CPU. The parity gate only means something on real hardware.
 
 ## Regression gate across builds
 
