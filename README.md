@@ -5,7 +5,7 @@
 
 ## In plain English
 
-**What it is.** Report cards for the AI features in a photo and video app. Each feature gets a
+Report cards for the AI features in a photo and video app. Each feature gets a
 passing grade, a set of test pictures where the right answer is already known, and planted
 mistakes that prove the grading works:
 - straighten a crooked horizon
@@ -16,22 +16,21 @@ mistakes that prove the grading works:
 - find duplicate photos
 - apply a colour "look" made with Core ML
 
-**Why it matters.** AI features fail quietly. A smaller, faster model can shift colours a
+AI features fail quietly. A smaller, faster model can shift colours a
 little, and a missed setting can make the app forget a photo is sideways. A quick look won't
 catch either. Measured gates will, before a release reaches customers.
 
-**What I built.**
 - Seeded test images with exact answers (no downloads), run on Apple's on-device Vision and Core ML.
 - My own Core ML colour model in three builds: full, compact (int8), and a deliberately bad 2-bit one. The compact build is checked against the full one and against a plain Swift copy of the same maths.
 - 19 gates, including CPU-vs-accelerator agreement, same-answer-every-time, speed, and a build-to-build regression check.
 - 9 planted integration bugs, each proven caught.
 
-**What it found.**
+Along the way, the tests turned up:
 - The same code built with a newer Apple toolkit silently switched the duplicate-photo model version. Distances shrank about 16 times, and everything looked like a duplicate. The fix is to pin model versions.
 - The horizon detector ignores a photo's "this is sideways" flag.
 - A red/blue channel swap passes a naive check. Only a known-colour test exposes it.
 
-**For a tech lead.** Swift, Vision, Core ML, coremltools, XCTest, Python, GitHub Actions; macOS
+Swift, Vision, Core ML, coremltools, XCTest, Python, GitHub Actions; macOS
 and iOS Simulator runs.
 
 ---
@@ -132,7 +131,7 @@ same scripts, and has not been run on a Jenkins server.
 <!-- set:begin -->
 ---
 
-**Part of a set.** Six small projects, one idea: test media apps with data that carries its own answer, and prove every test catches the bug it was written for.
+Six small projects, one idea: test media apps with data that carries its own answer, and prove every test catches the bug it was written for.
 
 - [frame-exact](https://github.com/su0xpj-bastion/frame-exact): timecode and edit maths, to the frame
 - [barcode-frames](https://github.com/su0xpj-bastion/barcode-frames): real video edits checked frame by frame
