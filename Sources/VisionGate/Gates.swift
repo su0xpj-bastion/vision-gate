@@ -277,6 +277,26 @@ public enum Gates {
 
     public static var names: [String] { all.map { $0.name } }
 
+    /// Gates whose oracle is only meaningful on real Apple silicon. On the iOS Simulator, saliency,
+    /// tracking and feature prints run on a different Vision code path with no Neural Engine; CI
+    /// measured crops keeping 20/36 subjects, tracking at 50%, and same-photo vs different-photo
+    /// distances overlapping (5.18 vs 2.77). Timing budgets mean nothing on a simulator either.
+    /// These gates still run there; their results are attached, then skipped, not failed.
+    public static let deviceOnly: Set<String> = [
+        "crop.subject-kept", "crop.orientation", "video.tracking", "library.duplicates", "perf.budgets",
+    ]
+
+    public static var onSimulator: Bool {
+        #if targetEnvironment(simulator)
+        return true
+        #else
+        return false
+        #endif
+    }
+
+    /// Gates this platform can judge: every gate on a Mac or device, all but `deviceOnly` on the Simulator.
+    public static func judged(_ name: String) -> Bool { !(onSimulator && deviceOnly.contains(name)) }
+
     public static func run(_ names: [String] = []) -> [GateResult] {
         all.filter { names.isEmpty || names.contains($0.name) }.map { g in
             do { return try g.run() } catch {

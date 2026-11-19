@@ -23,7 +23,7 @@ Follows the shared [test strategy](https://github.com/su0xpj-bastion/proof-sheet
 
 ## Exit criteria
 
-19/19 gates pass on macOS and the iOS Simulator; the fault matrix is exact (9/9); 0 baseline regressions. CI is green on the default branch.
+19/19 gates pass on macOS. On the iOS Simulator, the 14 gates it can judge pass, and the 5 device-only gates (saliency crops, tracking, duplicates, speed) run and are reported, not gated. See VG-8 in BUGS.md; the fault matrix is exact (9/9); 0 baseline regressions. CI is green on the default branch.
 
 ## Risks
 

@@ -5,34 +5,37 @@ import XCTest
 /// One XCTest per gate, so Xcode, Jenkins and Xcode Cloud list each feature's quality bar by name.
 /// Runs on macOS and on the iOS Simulator (`xcodebuild test -scheme vision-gate -destination ...`).
 final class GateTests: XCTestCase {
-    func gate(_ name: String) {
+    func gate(_ name: String) throws {
         let r = Gates.run([name]).first!
-        XCTAssertTrue(r.passed, "\(name): \(r.detail)")
         let a = XCTAttachment(string: "\(r.detail)\n\(r.metrics)")
         a.name = name
         a.lifetime = .keepAlways
         add(a)
+        if !Gates.judged(name) {
+            throw XCTSkip("\(name) is device-only: the Simulator runs a different Vision path (it reported: \(r.detail))")
+        }
+        XCTAssertTrue(r.passed, "\(name): \(r.detail)")
     }
 
-    func test_straighten_accuracy() { gate("straighten.accuracy") }
-    func test_straighten_leaves_level_alone() { gate("straighten.leaves-level-alone") }
-    func test_straighten_closed_loop() { gate("straighten.closed-loop") }
-    func test_straighten_robustness() { gate("straighten.robustness") }
-    func test_straighten_orientation() { gate("straighten.orientation") }
-    func test_crop_subject_kept() { gate("crop.subject-kept") }
-    func test_crop_orientation() { gate("crop.orientation") }
-    func test_video_shot_cuts() { gate("video.shot-cuts") }
-    func test_video_tracking() { gate("video.tracking") }
-    func test_titles_exact() { gate("titles.exact") }
-    func test_titles_no_hallucination() { gate("titles.no-hallucination") }
-    func test_library_duplicates() { gate("library.duplicates") }
-    func test_look_reference() { gate("look.reference") }
-    func test_look_color_contract() { gate("look.color-contract") }
-    func test_look_int8_drift() { gate("look.int8-drift") }
-    func test_look_compute_units() { gate("look.compute-units") }
-    func test_parity_cpu_vs_accelerated() { gate("parity.cpu-vs-accelerated") }
-    func test_determinism_repeat() { gate("determinism.repeat") }
-    func test_perf_budgets() { gate("perf.budgets") }
+    func test_straighten_accuracy() throws { try gate("straighten.accuracy") }
+    func test_straighten_leaves_level_alone() throws { try gate("straighten.leaves-level-alone") }
+    func test_straighten_closed_loop() throws { try gate("straighten.closed-loop") }
+    func test_straighten_robustness() throws { try gate("straighten.robustness") }
+    func test_straighten_orientation() throws { try gate("straighten.orientation") }
+    func test_crop_subject_kept() throws { try gate("crop.subject-kept") }
+    func test_crop_orientation() throws { try gate("crop.orientation") }
+    func test_video_shot_cuts() throws { try gate("video.shot-cuts") }
+    func test_video_tracking() throws { try gate("video.tracking") }
+    func test_titles_exact() throws { try gate("titles.exact") }
+    func test_titles_no_hallucination() throws { try gate("titles.no-hallucination") }
+    func test_library_duplicates() throws { try gate("library.duplicates") }
+    func test_look_reference() throws { try gate("look.reference") }
+    func test_look_color_contract() throws { try gate("look.color-contract") }
+    func test_look_int8_drift() throws { try gate("look.int8-drift") }
+    func test_look_compute_units() throws { try gate("look.compute-units") }
+    func test_parity_cpu_vs_accelerated() throws { try gate("parity.cpu-vs-accelerated") }
+    func test_determinism_repeat() throws { try gate("determinism.repeat") }
+    func test_perf_budgets() throws { try gate("perf.budgets") }
 }
 
 /// Client faults are in-process switches: each must fail exactly its pinned gates.
@@ -43,8 +46,9 @@ final class FaultMatrixTests: XCTestCase {
             Fault.active = [fault]
             defer { Fault.active = saved }
             // perf.budgets is timing, not correctness: on a loaded CI VM it can trip during any run.
-            let failed = Set(Gates.run().filter { !$0.passed && $0.name != "perf.budgets" }.map { $0.name })
-            XCTAssertEqual(failed, Gates.expectedFailures[fault], "\(fault)")
+            // On the Simulator only the gates it can judge are compared (see Gates.deviceOnly).
+            let failed = Set(Gates.run().filter { !$0.passed && $0.name != "perf.budgets" && Gates.judged($0.name) }.map { $0.name })
+            XCTAssertEqual(failed, (Gates.expectedFailures[fault] ?? []).filter(Gates.judged), "\(fault)")
         }
     }
 }

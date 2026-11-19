@@ -55,3 +55,18 @@ Severity: S1 (data loss or privacy), S2 (wrong output), S3 (broken interaction),
 
 - **What happened.** `perf.budgets` failed once under `ignoresOrientation` on CI. That fault doesn't touch timing.
 - **Fix.** The fault matrix compares correctness gates only. Speed is gated on the clean run.
+
+### VG-8 · The iOS Simulator gives different answers for saliency, tracking and duplicates
+**Finding (platform)**
+
+- **What happened.** The first full CI run on the iOS Simulator failed 5 gates that pass on the Mac:
+  - `crop.subject-kept`: 20 of 36 crops kept the subject (worst 0.00).
+  - `crop.orientation`: 1 of 6 rotated photos was cropped onto the subject.
+  - `video.tracking`: 50% of frames were on target.
+  - `library.duplicates`: same-photo distance went up to 5.18 and different-photo distance down to 2.77, so no threshold separates them.
+  - `perf.budgets`: OCR took 2,035 ms.
+
+  The fault matrix also broke, because these gates now failed under every fault.
+- **Why.** The Simulator has no Neural Engine, and these Vision requests run on a different code path there. The Simulator is not a valid oracle for them.
+- **Fix.** `Gates.deviceOnly` lists the 5 gates. On the Simulator they still run and their results are attached, but they are skipped, and the fault matrix compares only the gates the Simulator can judge. On a Mac (and on a device) all 19 are gated as before.
+- **What it means for release.** Shipping these features needs a real-device pass. Simulator green is not enough, and CI now says so instead of hiding it.
