@@ -3,8 +3,6 @@
 <!-- plain-english:begin -->
 [![ci](https://github.com/su0xpj-bastion/vision-gate/actions/workflows/ci.yml/badge.svg)](https://github.com/su0xpj-bastion/vision-gate/actions/workflows/ci.yml)
 
-## In plain English
-
 Report cards for the AI features in a photo and video app. Each feature gets a
 passing grade, a set of test pictures where the right answer is already known, and planted
 mistakes that prove the grading works:
