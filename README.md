@@ -1,5 +1,44 @@
 # vision-gate
 
+<!-- plain-english:begin -->
+[![ci](https://github.com/su0xpj-bastion/vision-gate/actions/workflows/ci.yml/badge.svg)](https://github.com/su0xpj-bastion/vision-gate/actions/workflows/ci.yml)
+
+## In plain English
+
+**What it is.** Report cards for the AI features in a photo and video app. Each feature gets a
+passing grade, a set of test pictures where the right answer is already known, and planted
+mistakes that prove the grading works:
+- straighten a crooked horizon
+- crop around the subject
+- follow a moving subject
+- spot shot changes
+- read on-screen titles
+- find duplicate photos
+- apply a colour "look" made with Core ML
+
+**Why it matters.** AI features fail quietly. A smaller, faster model can shift colours a
+little, and a missed setting can make the app forget a photo is sideways. A quick look won't
+catch either. Measured gates will, before a release reaches customers.
+
+**What I built.**
+- Seeded test images with exact answers (no downloads), run on Apple's on-device Vision and Core ML.
+- My own Core ML colour model in three builds: full, compact (int8), and a deliberately bad 2-bit one. The compact build is checked against the full one and against a plain Swift copy of the same maths.
+- 19 gates, including CPU-vs-accelerator agreement, same-answer-every-time, speed, and a build-to-build regression check.
+- 9 planted integration bugs, each proven caught.
+
+**What it found.**
+- The same code built with a newer Apple toolkit silently switched the duplicate-photo model version. Distances shrank about 16 times, and everything looked like a duplicate. The fix is to pin model versions.
+- The horizon detector ignores a photo's "this is sideways" flag.
+- A red/blue channel swap passes a naive check. Only a known-colour test exposes it.
+
+**For a tech lead.** Swift, Vision, Core ML, coremltools, XCTest, Python, GitHub Actions; macOS
+and iOS Simulator runs.
+
+---
+
+## Technical detail
+<!-- plain-english:end -->
+
 Quality gates for **on-device ML and AI features in a photo and video app**: the kind a creative app
 ships on Vision and Core ML. Each feature gets a gate with a measured bar, a golden set with known
 answers, and a fault matrix that proves the gate catches the bugs that really ship.
@@ -89,3 +128,16 @@ same scripts, and has not been run on a Jenkins server.
 - The golden set is synthetic, with exact answers by construction. It shows that the integration and the gates are right. It does not show accuracy on real photos, which needs a licensed, labelled set run through the same gates.
 - The Look model is a small fixed network that stands in for a production model's integration surface: loading, quantization, compute units and the input contract.
 - On the iOS Simulator, Core ML has no Neural Engine, and some Vision requests run on different code paths. If simulator and Mac results disagree, that is a finding, not a pass.
+
+<!-- set:begin -->
+---
+
+**Part of a set.** Six small projects, one idea: test media apps with data that carries its own answer, and prove every test catches the bug it was written for.
+
+- [frame-exact](https://github.com/su0xpj-bastion/frame-exact): timecode and edit maths, to the frame
+- [barcode-frames](https://github.com/su0xpj-bastion/barcode-frames): real video edits checked frame by frame
+- [proof-sheet](https://github.com/su0xpj-bastion/proof-sheet): a photo/video app with all 45 workflows tested
+- [enact-probe](https://github.com/su0xpj-bastion/enact-probe): live AI video, measured the way the viewer feels it
+- **[vision-gate](https://github.com/su0xpj-bastion/vision-gate)**: report cards for on-device AI photo features
+- [timeline-ml](https://github.com/su0xpj-bastion/timeline-ml): beat detection and transcript search
+<!-- set:end -->
