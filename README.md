@@ -31,6 +31,8 @@ Along the way, the tests turned up:
 Swift, Vision, Core ML, coremltools, XCTest, Python, GitHub Actions; macOS
 and iOS Simulator runs.
 
+[Test plan](TEST_PLAN.md) · [Bugs found](BUGS.md) · [Test strategy](https://github.com/su0xpj-bastion/proof-sheet/blob/main/docs/TEST_STRATEGY.md)
+
 ---
 
 ## Technical detail
